@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+// Route de base (pour vérifier que le service est actif)
 Route::get('/', function () {
-    return view('welcome');
+    return response('Auth Service Running', 200);
 });

@@ -12,6 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn('name');
+            $table->string('first_name')->after('id');
+            $table->string('last_name')->after('first_name');
             $table->string('avatar')->nullable()->after('date_of_birth');
             $table->boolean('is_active')->default(true)->after('avatar');
             $table->json('preferences')->nullable()->after('is_active');
@@ -25,8 +28,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['avatar', 'is_active', 'preferences']);
+            $table->dropColumn(['first_name', 'last_name', 'avatar', 'is_active', 'preferences']);
             $table->dropSoftDeletes();
+            $table->string('name')->after('id');
         });
     }
 };

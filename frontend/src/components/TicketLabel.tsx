@@ -2,7 +2,7 @@ import { Box, Text } from "@chakra-ui/react";
 
 type TicketLabelProps = {
   text: string;
-  variant?: "red" | "yellow"; // red par défaut
+  variant?: "red" | "yellow";
 };
 
 export const TicketLabel = ({ text, variant = "red" }: TicketLabelProps) => {
@@ -36,7 +36,7 @@ export const TicketLabel = ({ text, variant = "red" }: TicketLabelProps) => {
       color={isYellow ? "black" : "white"}
       backgroundImage={backgroundImage}
     >
-      <Text fontWeight="bold" ml="2">
+      <Text fontWeight="bold" ml="2" fontSize="sm">
         {text}
       </Text>
     </Box>

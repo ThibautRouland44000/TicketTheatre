@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -17,37 +17,22 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        // 2. Appel du Core Service pour validation et récupération du profil complet
-        try {
-            $response = Http::timeout(10)->post('http://core-service-app:80/api/validate-credentials', [
-                'email' => $request->email,
-                'password' => $request->password,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Service de validation indisponible',
-                'error' => $e->getMessage()
-            ], 503);
-        }
+        // 2. Récupérer l'utilisateur de la base partagée
+        $user = User::where('email', $request->email)->first();
 
-        // 3. Vérification de la réponse du Core Service
-        if ($response->failed() || $response->status() !== 200) {
+        // 3. Vérifier les credentials
+        if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'email' => ['Les identifiants fournis ne correspondent pas à nos enregistrements.'],
             ]);
         }
 
-        $userData = $response->json();
-
-        // 4. Créer ou mettre à jour l'utilisateur dans auth-service (réplique légère)
-        $user = User::updateOrCreate(
-            ['id' => $userData['id']], // Utiliser l'ID du core
-            [
-                'email' => $userData['email'],
-                'password' => 'NOPASS', // Pas de vrai mot de passe stocké ici
-            ]
-        );
+        // 4. Vérifier que l'utilisateur est actif
+        if (!$user->is_active) {
+            throw ValidationException::withMessages([
+                'email' => ['Votre compte est désactivé.'],
+            ]);
+        }
 
         // 5. Supprimer les anciens tokens et en créer un nouveau
         $user->tokens()->delete();
@@ -56,7 +41,19 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'token' => $token,
-            'user' => $userData, // Retourner les données complètes du core
+            'user' => [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'full_name' => $user->full_name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'phone_number' => $user->phone_number,
+                'sex' => $user->sex,
+                'date_of_birth' => $user->date_of_birth,
+                'avatar' => $user->avatar,
+                'is_active' => $user->is_active,
+            ]
         ], 200);
     }
 
@@ -72,25 +69,23 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        // Récupérer les infos à jour depuis le core-service
-        try {
-            $response = Http::timeout(10)
-                ->withHeaders(['Accept' => 'application/json'])
-                ->get('http://core-service-app:80/api/users/' . $request->user()->id);
-
-            if ($response->successful()) {
-                return response()->json([
-                    'success' => true,
-                    'user' => $response->json()
-                ]);
-            }
-        } catch (\Exception $e) {
-            // En cas d'erreur, retourner au moins les infos de base
-        }
-
+        $user = $request->user();
+        
         return response()->json([
             'success' => true,
-            'user' => $request->user()
+            'user' => [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'full_name' => $user->full_name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'phone_number' => $user->phone_number,
+                'sex' => $user->sex,
+                'date_of_birth' => $user->date_of_birth,
+                'avatar' => $user->avatar,
+                'is_active' => $user->is_active,
+            ]
         ]);
     }
 }

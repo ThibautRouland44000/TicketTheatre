@@ -3,18 +3,27 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
 
     protected $fillable = [
-        'id', // Important pour répliquer l'ID du core
+        'first_name',
+        'last_name',
         'email',
         'password',
+        'role',
+        'phone_number',
+        'sex',
+        'date_of_birth',
+        'avatar',
+        'is_active',
+        'preferences',
     ];
 
     protected $hidden = [
@@ -22,13 +31,21 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    // Désactiver l'auto-increment car on utilise les IDs du core
-    public $incrementing = true;
-
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'date_of_birth' => 'date',
+            'is_active' => 'boolean',
+            'preferences' => 'array',
+            'deleted_at' => 'datetime',
         ];
+    }
+
+    // Accessor pour le nom complet
+    public function getFullNameAttribute(): string
+    {
+        return "{$this->first_name} {$this->last_name}";
     }
 }

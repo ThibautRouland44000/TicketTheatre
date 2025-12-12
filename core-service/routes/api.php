@@ -5,11 +5,16 @@ use App\Http\Controllers\Api\HallController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\SeanceController;
 use App\Http\Controllers\Api\SpectacleController;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ValidationController;
+use App\Http\Controllers\Api\TestController;
 use Illuminate\Support\Facades\Route;
 
-// Route essentielle appelée par le Auth Service
+// Route essentielle appelée par le Auth Service (DEPRECATED - plus nécessaire)
 Route::post('/validate-credentials', [ValidationController::class, 'validateCredentials']);
+
+// Route pour récupérer un utilisateur
+Route::get('/users/{id}', [UserController::class, 'show']);
 
 // Routes publiques (sans authentification)
 Route::prefix('public')->group(function () {
@@ -35,7 +40,7 @@ Route::prefix('public')->group(function () {
     Route::get('/reservations/reference/{reference}', [ReservationController::class, 'getByReference']);
 });
 
-// Routes protégées (nécessitent authentification)
+// Routes protégées (nécessitent authentification Sanctum)
 Route::middleware('auth:sanctum')->group(function () {
     
     // Catégories (Admin seulement)

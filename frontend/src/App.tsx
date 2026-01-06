@@ -1,11 +1,23 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Base from "./Base";
+import Home from "./pages/Home";
+import Connexion from "./pages/Connexion";
+import Inscription from "./pages/Inscription";
+import Theatre from "./pages/Theatre";
+import Programme from "./pages/Programme";
 
-function App() {
+export default function App() {
   return (
-    <>
-      <Base />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<Base />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/connexion" element={<Connexion />} />
+          <Route path="/inscription" element={<Inscription />} />
+          <Route path="/theatre" element={<Theatre />} />
+          <Route path="/programme" element={<Programme />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;

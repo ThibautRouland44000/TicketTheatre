@@ -177,7 +177,7 @@ export default function Header() {
                     </>
                   ) : (
                     <>
-                      <Menu.Item value="connexion" onClick={() => navigate("/connexion")}>
+                      <Menu.Item value="connexion" onClick={() => navigate("/login")}>
                         Connexion
                       </Menu.Item>
                       <Menu.Item value="programme" onClick={() => navigate("/programme")}>

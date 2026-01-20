@@ -44,37 +44,22 @@ export default function Header() {
         </Box>
 
         {/* Desktop */}
-        <Box
-          bg="red.800"
-          borderRadius="full"
-          display="none"
-          sm={{ display: "block" }}
-        >
+        <Box bg="red.800" borderRadius="full" display="none" sm={{ display: "block" }}>
           <Flex alignItems="center" color="white" gap="4">
             {isAuthenticated ? (
               <>
                 <Link
                   asChild
                   p="2"
-                  _hover={{
-                    textDecoration: "none",
-                    bg: "red.700",
-                    borderRadius: "full",
-                  }}
+                  _hover={{ textDecoration: "none", bg: "red.700", borderRadius: "full" }}
                 >
-                  <RouterLink to="/mes-reservations">
-                    Mes réservations
-                  </RouterLink>
+                  <RouterLink to="/mes-reservations">Mes réservations</RouterLink>
                 </Link>
 
                 <Link
                   asChild
                   p="2"
-                  _hover={{
-                    textDecoration: "none",
-                    bg: "red.700",
-                    borderRadius: "full",
-                  }}
+                  _hover={{ textDecoration: "none", bg: "red.700", borderRadius: "full" }}
                 >
                   <RouterLink to="/programme">Le Programme</RouterLink>
                 </Link>
@@ -82,11 +67,7 @@ export default function Header() {
                 <Link
                   asChild
                   p="2"
-                  _hover={{
-                    textDecoration: "none",
-                    bg: "red.700",
-                    borderRadius: "full",
-                  }}
+                  _hover={{ textDecoration: "none", bg: "red.700", borderRadius: "full" }}
                 >
                   <RouterLink to="/theatre">Le Théâtre</RouterLink>
                 </Link>
@@ -111,9 +92,7 @@ export default function Header() {
                     <Menu.Positioner>
                       <Menu.Content bg="red.800" color="white">
                         <Menu.Item value="logout" onClick={handleLogout}>
-                          <Icon>
-                            <BiLogOut />
-                          </Icon>
+                          <Icon><BiLogOut /></Icon>
                           Déconnexion
                         </Menu.Item>
                       </Menu.Content>
@@ -126,11 +105,7 @@ export default function Header() {
                 <Link
                   asChild
                   p="2"
-                  _hover={{
-                    textDecoration: "none",
-                    bg: "red.700",
-                    borderRadius: "full",
-                  }}
+                  _hover={{ textDecoration: "none", bg: "red.700", borderRadius: "full" }}
                 >
                   <RouterLink to="/connexion">Connexion</RouterLink>
                 </Link>
@@ -138,42 +113,30 @@ export default function Header() {
                 <Link
                   asChild
                   p="2"
-                  _hover={{
-                    textDecoration: "none",
-                    bg: "red.700",
-                    borderRadius: "full",
-                  }}
+                  _hover={{ textDecoration: "none", bg: "red.700", borderRadius: "full" }}
                 >
                   <RouterLink to="/programme">Le Programme</RouterLink>
                 </Link>
 
-                <Link
-                  asChild
-                  p="2"
-                  _hover={{
-                    textDecoration: "none",
-                    bg: "red.700",
-                    borderRadius: "full",
-                  }}
-                >
-                  <RouterLink to="/theatre">Le Théatre</RouterLink>
-                </Link>
+            <Link
+              asChild
+              p="2"
+              _hover={{ textDecoration: "none", bg: "red.700", borderRadius: "full" }}
+            >
+              <RouterLink to="/theatre">Le Théatre</RouterLink>
+            </Link>
 
-                <Link
-                  asChild
-                  p="2"
-                  _hover={{
-                    textDecoration: "none",
-                    bg: "red.700",
-                    borderRadius: "full",
-                  }}
-                >
-                  <RouterLink to="/mes-reservations">
-                    Mes réservations
-                  </RouterLink>
-                </Link>
-              </>
-            )}
+            <Link
+              asChild
+              p="2"
+              _hover={{
+                textDecoration: "none",
+                bg: "red.700",
+                borderRadius: "full",
+              }}
+            >
+              <RouterLink to="/mes-reservations">Mes réservations</RouterLink>
+            </Link>
           </Flex>
         </Box>
 
@@ -202,38 +165,23 @@ export default function Header() {
                   {isAuthenticated ? (
                     <>
                       <Menu.Item value="user" disabled>
-                        <Icon>
-                          <BiUser />
-                        </Icon>
+                        <Icon><BiUser /></Icon>
                         {user?.full_name}
                       </Menu.Item>
                       <Menu.Separator />
-                      <Menu.Item
-                        value="reservations"
-                        onClick={() => navigate("/mes-reservations")}
-                      >
-                        <Icon>
-                          <BiBookmark />
-                        </Icon>
+                      <Menu.Item value="reservations" onClick={() => navigate("/mes-reservations")}>
+                        <Icon><BiBookmark /></Icon>
                         Mes réservations
                       </Menu.Item>
-                      <Menu.Item
-                        value="programme"
-                        onClick={() => navigate("/programme")}
-                      >
+                      <Menu.Item value="programme" onClick={() => navigate("/programme")}>
                         Le Programme
                       </Menu.Item>
-                      <Menu.Item
-                        value="theatre"
-                        onClick={() => navigate("/theatre")}
-                      >
+                      <Menu.Item value="theatre" onClick={() => navigate("/theatre")}>
                         Le Théâtre
                       </Menu.Item>
                       <Menu.Separator />
                       <Menu.Item value="logout" onClick={handleLogout}>
-                        <Icon>
-                          <BiLogOut />
-                        </Icon>
+                        <Icon><BiLogOut /></Icon>
                         Déconnexion
                       </Menu.Item>
                     </>
@@ -242,16 +190,10 @@ export default function Header() {
                       <Menu.Item value="connexion" onClick={() => navigate("/login")}>
                         Connexion
                       </Menu.Item>
-                      <Menu.Item
-                        value="programme"
-                        onClick={() => navigate("/programme")}
-                      >
+                      <Menu.Item value="programme" onClick={() => navigate("/programme")}>
                         Le Programme
                       </Menu.Item>
-                      <Menu.Item
-                        value="theatre"
-                        onClick={() => navigate("/theatre")}
-                      >
+                      <Menu.Item value="theatre" onClick={() => navigate("/theatre")}>
                         Le Théâtre
                       </Menu.Item>
                     </>

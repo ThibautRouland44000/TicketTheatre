@@ -61,6 +61,18 @@ export default function Header() {
             >
               <RouterLink to="/theatre">Le Théatre</RouterLink>
             </Link>
+
+            <Link
+              asChild
+              p="2"
+              _hover={{
+                textDecoration: "none",
+                bg: "red.700",
+                borderRadius: "full",
+              }}
+            >
+              <RouterLink to="/mes-reservations">Mes réservations</RouterLink>
+            </Link>
           </Flex>
         </Box>
 

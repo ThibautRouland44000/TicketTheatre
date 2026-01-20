@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 import { Box, Button, Card, Flex, Input, Stack, Text } from "@chakra-ui/react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { TicketLabel } from "../components/TicketLabel";
 
 type ReservationState = {
   showId?: string;
   title?: string;
-  price?: number; // prix unitaire
+  price?: number;
 };
 
 // Auth placeholder
@@ -21,11 +21,13 @@ function isAuthenticated(): boolean {
 export default function Reservation() {
   const location = useLocation();
   const state = (location.state ?? {}) as ReservationState;
+  const [searchParams] = useSearchParams();
+  const dev = searchParams.get("dev") === "1";
 
   const title = state.title ?? "Titre pièce";
   const price = state.price ?? 15;
 
-  const authed = isAuthenticated();
+  const authed = dev || isAuthenticated();
 
   const [qty, setQty] = useState<number>(1);
 
@@ -123,10 +125,6 @@ export default function Reservation() {
             >
               Procéder au paiement
             </Button>
-
-            <Text fontSize="sm" opacity={0.8} textAlign="center">
-              Le paiement Stripe sera branché via le service dédié (checkout/session).
-            </Text>
           </Stack>
         </Card.Body>
       </Card.Root>

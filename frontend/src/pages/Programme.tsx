@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
-import { Box, Flex, Grid, Text, Button, IconButton, Portal } from "@chakra-ui/react";
+import { useMemo, useState, useEffect } from "react";
+import { Box, Flex, Grid, Text, Button, IconButton, Portal, Spinner, Center } from "@chakra-ui/react";
 import { SeancesNav } from "../components/SeancesNav";
 import { TicketLabel } from "../components/TicketLabel";
 import { TicketCard } from "../components/TicketCard";
 import { Filter } from "../components/Filter";
 import { LuX } from "react-icons/lu";
+import { coreService, type Seance } from "../services/core.service";
 
 type SeancesTab = "affiche" | "toutes";
 
@@ -21,7 +22,7 @@ function formatShortDay(d: Date) {
 }
 
 function dayLabelByIndex(d: Date, idx: number) {
-  if (idx === 0) return "AUJOURD’HUI";
+  if (idx === 0) return "AUJOURD'HUI";
   if (idx === 1) return "DEMAIN";
   if (idx === 2) return "APRÈS-DEMAIN";
   return formatShortDay(d);
@@ -29,6 +30,8 @@ function dayLabelByIndex(d: Date, idx: number) {
 
 export default function Programme() {
   const [tab, setTab] = useState<SeancesTab>("affiche");
+  const [seances, setSeances] = useState<Seance[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const days = useMemo(() => {
     const base = new Date();
@@ -41,22 +44,72 @@ export default function Programme() {
   }, []);
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-
-  const afficheByDayCount = useMemo(() => {
-    return [6, 3, 9, 6, 6, 12, 4];
-  }, []);
-
-  const visibleAfficheCount = afficheByDayCount[selectedDayIndex] ?? 6;
-
-  const allSeancesCount = 18;
-
   const [filters, setFilters] = useState<FilterValues>({
     genre: "",
     metteurEnScene: "",
     date: "",
   });
-
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  useEffect(() => {
+    if (tab === "affiche") {
+      loadSeancesByDay(selectedDayIndex);
+    } else {
+      loadAllSeances();
+    }
+  }, [tab, selectedDayIndex]);
+
+  const loadSeancesByDay = async (dayIndex: number) => {
+    setLoading(true);
+    try {
+      const selectedDate = days[dayIndex];
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      
+      const nextDay = new Date(selectedDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const nextDateStr = nextDay.toISOString().split('T')[0];
+
+      const data = await coreService.getSeances({
+        date_from: dateStr,
+        date_to: nextDateStr,
+        status: 'scheduled',
+        per_page: 100,
+      });
+      
+      setSeances(data.data || []);
+    } catch (error) {
+      console.error('Erreur chargement séances:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadAllSeances = async () => {
+    setLoading(true);
+    try {
+      const data = await coreService.getSeances({
+        upcoming_only: true,
+        status: 'scheduled',
+        per_page: 100,
+      });
+      setSeances(data.data || []);
+    } catch (error) {
+      console.error('Erreur chargement séances:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Extraire les spectacles uniques des séances
+  const spectacles = useMemo(() => {
+    const uniqueSpectacles = new Map();
+    seances.forEach(seance => {
+      if (seance.spectacle && !uniqueSpectacles.has(seance.spectacle.id)) {
+        uniqueSpectacles.set(seance.spectacle.id, seance.spectacle);
+      }
+    });
+    return Array.from(uniqueSpectacles.values());
+  }, [seances]);
 
   return (
     <Box w="full" maxW="1200px" mx="auto" pt={4} pb={8}>
@@ -71,10 +124,10 @@ export default function Programme() {
             pb={2}
             mb={6}
             align="center"
-            justify="center"                         
-            flexWrap="wrap"                      
+            justify="center"
+            flexWrap="wrap"
             w="full"
-            >
+          >
             {days.map((d, idx) => {
               const label = dayLabelByIndex(d, idx);
               const isActive = idx === selectedDayIndex;
@@ -98,17 +151,28 @@ export default function Programme() {
               day: "2-digit",
               month: "long",
             })}
+            {" "}({seances.length} séance{seances.length > 1 ? 's' : ''})
           </Text>
 
-          <Grid
-            templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
-            gap={6}
-            justifyItems="center"
-          >
-            {Array.from({ length: visibleAfficheCount }).map((_, i) => (
-              <TicketCard key={`affiche-${selectedDayIndex}-${i}`} />
-            ))}
-          </Grid>
+          {loading ? (
+            <Center minH="300px">
+              <Spinner size="xl" color="red.500" />
+            </Center>
+          ) : spectacles.length === 0 ? (
+            <Center minH="300px">
+              <Text color="gray.500">Aucune séance prévue ce jour</Text>
+            </Center>
+          ) : (
+            <Grid
+              templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
+              gap={6}
+              justifyItems="center"
+            >
+              {spectacles.map((spectacle) => (
+                <TicketCard key={spectacle.id} spectacle={spectacle} />
+              ))}
+            </Grid>
+          )}
         </>
       )}
 
@@ -128,23 +192,33 @@ export default function Programme() {
           </Flex>
 
           <Text mb={4} fontWeight="semibold">
-            Toutes les séances
+            Toutes les séances à venir
             {(filters.genre || filters.metteurEnScene || filters.date) && (
               <> — filtres appliqués</>
             )}
+            {" "}({seances.length} séance{seances.length > 1 ? 's' : ''})
           </Text>
 
-          <Grid
-            templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
-            gap={6}
-            justifyItems="center"
-          >
-            {Array.from({ length: allSeancesCount }).map((_, i) => (
-              <TicketCard key={`toutes-${i}`} />
-            ))}
-          </Grid>
+          {loading ? (
+            <Center minH="300px">
+              <Spinner size="xl" color="red.500" />
+            </Center>
+          ) : spectacles.length === 0 ? (
+            <Center minH="300px">
+              <Text color="gray.500">Aucune séance disponible</Text>
+            </Center>
+          ) : (
+            <Grid
+              templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }}
+              gap={6}
+              justifyItems="center"
+            >
+              {spectacles.map((spectacle) => (
+                <TicketCard key={spectacle.id} spectacle={spectacle} />
+              ))}
+            </Grid>
+          )}
 
-          {/* POPUP FILTER */}
           {isFilterOpen && (
             <Portal>
               <Box

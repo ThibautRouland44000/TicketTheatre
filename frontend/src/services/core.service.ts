@@ -1,4 +1,5 @@
-import fetchWithAuth, { API_CONFIG, type PaginatedResponse, type ApiResponse } from './api';
+import { API_CONFIG, type PaginatedResponse, type ApiResponse } from './api';
+import fetchWithAuth from './api.ts'
 
 export interface Category {
   id: number;
@@ -79,15 +80,30 @@ export interface Reservation {
 class CoreService {
   // Catégories
   async getCategories(): Promise<Category[]> {
-    const response = await fetch(`${API_CONFIG.CORE_URL}/public/categories`);
-    const data: ApiResponse<Category[]> = await response.json();
-    return data.data || [];
+    try {
+      const response = await fetch(`${API_CONFIG.CORE_URL}/public/categories`);
+      if (!response.ok) {
+        console.error('Erreur API categories:', response.status);
+        return [];
+      }
+      const data: ApiResponse<Category[]> = await response.json();
+      return Array.isArray(data.data) ? data.data : [];
+    } catch (error) {
+      console.error('Erreur getCategories:', error);
+      return [];
+    }
   }
 
   async getCategory(id: number): Promise<Category | null> {
-    const response = await fetch(`${API_CONFIG.CORE_URL}/public/categories/${id}`);
-    const data: ApiResponse<Category> = await response.json();
-    return data.data || null;
+    try {
+      const response = await fetch(`${API_CONFIG.CORE_URL}/public/categories/${id}`);
+      if (!response.ok) return null;
+      const data: ApiResponse<Category> = await response.json();
+      return data.data || null;
+    } catch (error) {
+      console.error('Erreur getCategory:', error);
+      return null;
+    }
   }
 
   // Spectacles
@@ -99,28 +115,76 @@ class CoreService {
     page?: number;
     per_page?: number;
   }): Promise<PaginatedResponse<Spectacle>> {
-    const queryParams = new URLSearchParams();
-    if (params?.category_id) queryParams.append('category_id', params.category_id.toString());
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.is_published !== undefined) queryParams.append('is_published', params.is_published.toString());
-    if (params?.search) queryParams.append('search', params.search);
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.category_id) queryParams.append('category_id', params.category_id.toString());
+      if (params?.status) queryParams.append('status', params.status);
+      if (params?.is_published !== undefined) queryParams.append('is_published', params.is_published.toString());
+      if (params?.search) queryParams.append('search', params.search);
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
 
-    const response = await fetch(`${API_CONFIG.CORE_URL}/public/spectacles?${queryParams}`);
-    return await response.json();
+      const url = `${API_CONFIG.CORE_URL}/public/spectacles?${queryParams}`;
+      console.log('Fetching spectacles from:', url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        console.error('Erreur API spectacles:', response.status);
+        return { success: false, data: [] };
+      }
+      
+      const result = await response.json();
+      //console.log('Spectacles data RAW:', result);
+      
+      // Le backend peut retourner soit un tableau direct, soit un objet paginé
+      let spectaclesList: Spectacle[] = [];
+      
+      if (Array.isArray(result.data)) {
+        // Cas 1: data est directement un tableau
+        spectaclesList = result.data;
+      } else if (result.data && typeof result.data === 'object') {
+        // Cas 2: data est un objet de pagination avec data/items à l'intérieur
+        if (Array.isArray(result.data.data)) {
+          spectaclesList = result.data.data;
+        } else if (Array.isArray(result.data.items)) {
+          spectaclesList = result.data.items;
+        }
+      }
+
+      return {
+        success: result.success || true,
+        data: spectaclesList,
+        meta: result.meta || result.data?.meta
+      };
+    } catch (error) {
+      console.error('Erreur getSpectacles:', error);
+      return { success: false, data: [] };
+    }
   }
 
   async getUpcomingSpectacles(): Promise<Spectacle[]> {
-    const response = await fetch(`${API_CONFIG.CORE_URL}/public/spectacles/upcoming`);
-    const data: ApiResponse<Spectacle[]> = await response.json();
-    return data.data || [];
+    try {
+      const response = await fetch(`${API_CONFIG.CORE_URL}/public/spectacles/upcoming`);
+      if (!response.ok) return [];
+      const data: ApiResponse<Spectacle[]> = await response.json();
+      return Array.isArray(data.data) ? data.data : [];
+    } catch (error) {
+      console.error('Erreur getUpcomingSpectacles:', error);
+      return [];
+    }
   }
 
   async getSpectacle(id: number): Promise<Spectacle | null> {
-    const response = await fetch(`${API_CONFIG.CORE_URL}/public/spectacles/${id}`);
-    const data: ApiResponse<Spectacle> = await response.json();
-    return data.data || null;
+    try {
+      const response = await fetch(`${API_CONFIG.CORE_URL}/public/spectacles/${id}`);
+      if (!response.ok) return null;
+      const data: ApiResponse<Spectacle> = await response.json();
+      return data.data || null;
+    } catch (error) {
+      console.error('Erreur getSpectacle:', error);
+      return null;
+    }
   }
 
   // Séances
@@ -134,24 +198,55 @@ class CoreService {
     page?: number;
     per_page?: number;
   }): Promise<PaginatedResponse<Seance>> {
-    const queryParams = new URLSearchParams();
-    if (params?.spectacle_id) queryParams.append('spectacle_id', params.spectacle_id.toString());
-    if (params?.hall_id) queryParams.append('hall_id', params.hall_id.toString());
-    if (params?.status) queryParams.append('status', params.status);
-    if (params?.date_from) queryParams.append('date_from', params.date_from);
-    if (params?.date_to) queryParams.append('date_to', params.date_to);
-    if (params?.upcoming_only) queryParams.append('upcoming_only', 'true');
-    if (params?.page) queryParams.append('page', params.page.toString());
-    if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
+    try {
+      const queryParams = new URLSearchParams();
+      if (params?.spectacle_id) queryParams.append('spectacle_id', params.spectacle_id.toString());
+      if (params?.hall_id) queryParams.append('hall_id', params.hall_id.toString());
+      if (params?.status) queryParams.append('status', params.status);
+      if (params?.date_from) queryParams.append('date_from', params.date_from);
+      if (params?.date_to) queryParams.append('date_to', params.date_to);
+      if (params?.upcoming_only) queryParams.append('upcoming_only', 'true');
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.per_page) queryParams.append('per_page', params.per_page.toString());
 
-    const response = await fetch(`${API_CONFIG.CORE_URL}/public/seances?${queryParams}`);
-    return await response.json();
+      const response = await fetch(`${API_CONFIG.CORE_URL}/public/seances?${queryParams}`);
+      if (!response.ok) return { success: false, data: [] };
+      
+      const result = await response.json();
+      
+      // Même logique pour les séances
+      let seancesList: Seance[] = [];
+      if (Array.isArray(result.data)) {
+        seancesList = result.data;
+      } else if (result.data && typeof result.data === 'object') {
+        if (Array.isArray(result.data.data)) {
+          seancesList = result.data.data;
+        } else if (Array.isArray(result.data.items)) {
+          seancesList = result.data.items;
+        }
+      }
+      
+      return {
+        success: result.success || true,
+        data: seancesList,
+        meta: result.meta || result.data?.meta
+      };
+    } catch (error) {
+      console.error('Erreur getSeances:', error);
+      return { success: false, data: [] };
+    }
   }
 
   async getSeance(id: number): Promise<Seance | null> {
-    const response = await fetch(`${API_CONFIG.CORE_URL}/public/seances/${id}`);
-    const data: ApiResponse<Seance> = await response.json();
-    return data.data || null;
+    try {
+      const response = await fetch(`${API_CONFIG.CORE_URL}/public/seances/${id}`);
+      if (!response.ok) return null;
+      const data: ApiResponse<Seance> = await response.json();
+      return data.data || null;
+    } catch (error) {
+      console.error('Erreur getSeance:', error);
+      return null;
+    }
   }
 
   async getAvailableSeats(seanceId: number): Promise<{
@@ -160,9 +255,15 @@ class CoreService {
     remaining_seats: number;
     is_available: boolean;
   } | null> {
-    const response = await fetch(`${API_CONFIG.CORE_URL}/public/seances/${seanceId}/available-seats`);
-    const data = await response.json();
-    return data.data || null;
+    try {
+      const response = await fetch(`${API_CONFIG.CORE_URL}/public/seances/${seanceId}/available-seats`);
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.data || null;
+    } catch (error) {
+      console.error('Erreur getAvailableSeats:', error);
+      return null;
+    }
   }
 
   // Réservations (authentification requise)
@@ -188,21 +289,39 @@ class CoreService {
   }
 
   async getUserReservations(userId: number): Promise<Reservation[]> {
-    const response = await fetchWithAuth(`${API_CONFIG.CORE_URL}/users/${userId}/reservations`);
-    const data: ApiResponse<Reservation[]> = await response.json();
-    return data.data || [];
+    try {
+      const response = await fetchWithAuth(`${API_CONFIG.CORE_URL}/users/${userId}/reservations`);
+      if (!response.ok) return [];
+      const data: ApiResponse<Reservation[]> = await response.json();
+      return Array.isArray(data.data) ? data.data : [];
+    } catch (error) {
+      console.error('Erreur getUserReservations:', error);
+      return [];
+    }
   }
 
   async getReservation(id: number): Promise<Reservation | null> {
-    const response = await fetchWithAuth(`${API_CONFIG.CORE_URL}/reservations/${id}`);
-    const data: ApiResponse<Reservation> = await response.json();
-    return data.data || null;
+    try {
+      const response = await fetchWithAuth(`${API_CONFIG.CORE_URL}/reservations/${id}`);
+      if (!response.ok) return null;
+      const data: ApiResponse<Reservation> = await response.json();
+      return data.data || null;
+    } catch (error) {
+      console.error('Erreur getReservation:', error);
+      return null;
+    }
   }
 
   async getReservationByReference(reference: string): Promise<Reservation | null> {
-    const response = await fetch(`${API_CONFIG.CORE_URL}/public/reservations/reference/${reference}`);
-    const data: ApiResponse<Reservation> = await response.json();
-    return data.data || null;
+    try {
+      const response = await fetch(`${API_CONFIG.CORE_URL}/public/reservations/reference/${reference}`);
+      if (!response.ok) return null;
+      const data: ApiResponse<Reservation> = await response.json();
+      return data.data || null;
+    } catch (error) {
+      console.error('Erreur getReservationByReference:', error);
+      return null;
+    }
   }
 
   async cancelReservation(id: number, reason?: string): Promise<void> {

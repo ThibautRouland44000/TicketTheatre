@@ -5,8 +5,8 @@ import Connexion from "./pages/Connexion";
 import Inscription from "./pages/Inscription";
 import Theatre from "./pages/Theatre";
 import Programme from "./pages/Programme";
-import Reservation from "./pages/Reservation";
-import MesReservations from "./pages/MesReservations";
+import SpectacleDetails from "./pages/SpectacleDetails";
+import MesReservations from "./pages/MesReservations.tsx";
 
 export default function App() {
   return (
@@ -18,8 +18,8 @@ export default function App() {
           <Route path="/register" element={<Inscription />} />
           <Route path="/theatre" element={<Theatre />} />
           <Route path="/programme" element={<Programme />} />
-          <Route path="/reservation" element={<Reservation />} />
-          <Route path="/mes-reservations" element={<MesReservations />} />
+          <Route path="/spectacle/:id" element={<SpectacleDetails />} />
+          <Route path="/mes-reservations" element={<MesReservations/>} />
         </Route>
       </Routes>
     </BrowserRouter>

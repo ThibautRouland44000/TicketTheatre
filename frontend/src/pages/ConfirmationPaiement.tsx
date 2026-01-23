@@ -10,7 +10,6 @@ import {
   Center,
   Stack,
 } from "@chakra-ui/react";
-import { coreService } from "../services/core.service";
 import { toaster } from "../components/ui/toaster";
 
 export default function ConfirmationPaiement() {
@@ -21,44 +20,30 @@ export default function ConfirmationPaiement() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    const paymentIntent = searchParams.get("payment_intent");
     const status = searchParams.get("redirect_status");
 
-    if (status === "succeeded" && paymentIntent && reservationId) {
-      confirmPayment(parseInt(reservationId), paymentIntent);
-    } else {
-      setLoading(false);
-      toaster.error({
-        title: "Erreur",
-        description: "Informations de paiement manquantes",
-      });
-    }
-  }, [reservationId, searchParams]);
-
-  const confirmPayment = async (resId: number, paymentIntentId: string) => {
-    try {
-      await coreService.confirmPayment(resId, paymentIntentId);
+    if (status === "succeeded") {
       setSuccess(true);
       toaster.success({
         title: "Paiement confirmé !",
-        description: "Votre réservation est confirmée",
+        description: "Votre réservation est confirmée. Le webhook mettra à jour le statut.",
       });
-    } catch (error) {
+    } else {
       toaster.error({
         title: "Erreur",
-        description: error instanceof Error ? error.message : "Erreur lors de la confirmation",
+        description: "Le paiement n'a pas abouti",
       });
-    } finally {
-      setLoading(false);
     }
-  };
+    
+    setLoading(false);
+  }, [reservationId, searchParams]);
 
   if (loading) {
     return (
       <Center minH="70vh">
         <Stack gap={4} textAlign="center">
           <Spinner size="xl" color="red.500" />
-          <Text>Confirmation du paiement en cours...</Text>
+          <Text>Vérification du paiement...</Text>
         </Stack>
       </Center>
     );
@@ -75,7 +60,7 @@ export default function ConfirmationPaiement() {
               </Heading>
               <Text>
                 {success
-                  ? "Votre réservation a été confirmée avec succès"
+                  ? "Votre réservation a été confirmée avec succès. Vous pouvez consulter vos réservations."
                   : "Une erreur est survenue lors du traitement de votre paiement"}
               </Text>
               <Button onClick={() => navigate("/mes-reservations")}>

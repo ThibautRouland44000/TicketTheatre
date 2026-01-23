@@ -76,11 +76,9 @@ export interface Reservation {
   created_at: string;
 }
 
-// Helper pour parser les réponses JSON en gérant les erreurs HTML
 async function parseResponse<T>(response: Response): Promise<T> {
   const text = await response.text();
   
-  // Vérifier si c'est du HTML (erreur Laravel)
   if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
     console.error('Réponse HTML reçue au lieu de JSON:', text.substring(0, 200));
     throw new Error(`Erreur serveur (${response.status}): Réponse HTML au lieu de JSON`);
@@ -95,13 +93,11 @@ async function parseResponse<T>(response: Response): Promise<T> {
 }
 
 class CoreService {
+  // Categories CRUD
   async getCategories(): Promise<Category[]> {
     try {
       const response = await fetch(`${API_CONFIG.CORE_URL}/public/categories`);
-      if (!response.ok) {
-        console.error('Erreur API categories:', response.status);
-        return [];
-      }
+      if (!response.ok) return [];
       const data: ApiResponse<Category[]> = await parseResponse(response);
       return Array.isArray(data.data) ? data.data : [];
     } catch (error) {
@@ -110,18 +106,34 @@ class CoreService {
     }
   }
 
-  async getCategory(id: number): Promise<Category | null> {
-    try {
-      const response = await fetch(`${API_CONFIG.CORE_URL}/public/categories/${id}`);
-      if (!response.ok) return null;
-      const data: ApiResponse<Category> = await parseResponse(response);
-      return data.data || null;
-    } catch (error) {
-      console.error('Erreur getCategory:', error);
-      return null;
-    }
+  async createCategory(data: { name: string; description?: string }): Promise<Category> {
+    const response = await fetchWithAuth(`${API_CONFIG.CORE_URL}/categories`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Impossible de créer');
+    const result: ApiResponse<Category> = await parseResponse(response);
+    if (!result.data) throw new Error('Erreur');
+    return result.data;
   }
 
+  async updateCategory(id: number, data: { name: string; description?: string }): Promise<Category> {
+    const response = await fetchWithAuth(`${API_CONFIG.CORE_URL}/categories/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Impossible de mettre à jour');
+    const result: ApiResponse<Category> = await parseResponse(response);
+    if (!result.data) throw new Error('Erreur');
+    return result.data;
+  }
+
+  async deleteCategory(id: number): Promise<void> {
+    const response = await fetchWithAuth(`${API_CONFIG.CORE_URL}/categories/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Impossible de supprimer');
+  }
   async getSpectacles(params?: {
     category_id?: number;
     status?: string;
@@ -141,19 +153,19 @@ class CoreService {
 
       const url = `${API_CONFIG.CORE_URL}/public/spectacles?${queryParams}`;
       console.log('Fetching spectacles from:', url);
-      
+
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         console.error('Erreur API spectacles:', response.status);
         return { success: false, data: [] };
       }
-      
+
       const result = await parseResponse<any>(response);
       console.log('Spectacles data RAW:', result);
-      
+
       let spectaclesList: Spectacle[] = [];
-      
+
       if (Array.isArray(result.data)) {
         spectaclesList = result.data;
       } else if (result.data && typeof result.data === 'object') {
@@ -163,9 +175,9 @@ class CoreService {
           spectaclesList = result.data.items;
         }
       }
-      
+
       console.log('Spectacles extraits:', spectaclesList);
-      
+
       return {
         success: result.success || true,
         data: spectaclesList,
@@ -189,6 +201,30 @@ class CoreService {
     }
   }
 
+  async createSpectacle(data: {
+    title: string;
+    description?: string
+    duration?: number;
+    base_price: number;
+    image_url?: string;
+    poster_url?: string;
+    trailer_url?: string;
+    language?: string;
+    age_restriction?: number;
+    category_id?: number;
+    category?: Category;
+    director?: string;
+    actors?: string[]; }): Promise<Spectacle> {
+    const response = await fetchWithAuth(`${API_CONFIG.CORE_URL}/spectacles`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Impossible de créer');
+    const result: ApiResponse<Spectacle> = await parseResponse(response);
+    if (!result.data) throw new Error('Erreur');
+    return result.data;
+  }
+
   async getSpectacle(id: number): Promise<Spectacle | null> {
     try {
       const response = await fetch(`${API_CONFIG.CORE_URL}/public/spectacles/${id}`);
@@ -201,16 +237,7 @@ class CoreService {
     }
   }
 
-  async getSeances(params?: {
-    spectacle_id?: number;
-    hall_id?: number;
-    status?: string;
-    date_from?: string;
-    date_to?: string;
-    upcoming_only?: boolean;
-    page?: number;
-    per_page?: number;
-  }): Promise<PaginatedResponse<Seance>> {
+  async getSeances(params?: any): Promise<PaginatedResponse<Seance>> {
     try {
       const queryParams = new URLSearchParams();
       if (params?.spectacle_id) queryParams.append('spectacle_id', params.spectacle_id.toString());
@@ -252,31 +279,11 @@ class CoreService {
   async getSeance(id: number): Promise<Seance | null> {
     try {
       const response = await fetch(`${API_CONFIG.CORE_URL}/public/seances/${id}`);
-      if (!response.ok) {
-        console.error('Erreur getSeance, status:', response.status);
-        return null;
-      }
+      if (!response.ok) return null;
       const data: ApiResponse<Seance> = await parseResponse(response);
       return data.data || null;
     } catch (error) {
       console.error('Erreur getSeance:', error);
-      return null;
-    }
-  }
-
-  async getAvailableSeats(seanceId: number): Promise<{
-    total_seats: number;
-    booked_seats: number;
-    remaining_seats: number;
-    is_available: boolean;
-  } | null> {
-    try {
-      const response = await fetch(`${API_CONFIG.CORE_URL}/public/seances/${seanceId}/available-seats`);
-      if (!response.ok) return null;
-      const data = await parseResponse<any>(response);
-      return data.data || null;
-    } catch (error) {
-      console.error('Erreur getAvailableSeats:', error);
       return null;
     }
   }
@@ -287,26 +294,17 @@ class CoreService {
     quantity: number;
     seats?: string[];
   }): Promise<Reservation> {
-    console.log('createReservation - URL:', `${API_CONFIG.CORE_URL}/reservations`);
-    console.log('createReservation - Data:', data);
-    
     const response = await fetchWithAuth(`${API_CONFIG.CORE_URL}/reservations`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
 
-    console.log('createReservation - Response status:', response.status);
-    console.log('createReservation - Response headers:', response.headers);
-
     if (!response.ok) {
       const errorData = await parseResponse<any>(response);
-      console.error('createReservation - Error:', errorData);
       throw new Error(errorData.message || 'Erreur lors de la réservation');
     }
 
     const result: ApiResponse<Reservation> = await parseResponse(response);
-    console.log('createReservation - Result:', result);
-    
     if (!result.data) throw new Error('Erreur lors de la réservation');
     return result.data;
   }
@@ -331,18 +329,6 @@ class CoreService {
       return data.data || null;
     } catch (error) {
       console.error('Erreur getReservation:', error);
-      return null;
-    }
-  }
-
-  async getReservationByReference(reference: string): Promise<Reservation | null> {
-    try {
-      const response = await fetch(`${API_CONFIG.CORE_URL}/public/reservations/reference/${reference}`);
-      if (!response.ok) return null;
-      const data: ApiResponse<Reservation> = await parseResponse(response);
-      return data.data || null;
-    } catch (error) {
-      console.error('Erreur getReservationByReference:', error);
       return null;
     }
   }

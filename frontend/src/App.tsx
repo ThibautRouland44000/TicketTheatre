@@ -10,6 +10,8 @@ import Reservation from "./pages/Reservation";
 import PaiementPage from "./pages/PaiementPage";
 import ConfirmationPaiement from "./pages/ConfirmationPaiement";
 import MesReservations from "./pages/MesReservations";
+import Admin from "./pages/Admin";
+import AdminCategories from "./pages/admin/AdminCategories";
 
 export default function App() {
   return (
@@ -26,6 +28,8 @@ export default function App() {
           <Route path="/paiement/:reservationId" element={<PaiementPage />} />
           <Route path="/confirmation-paiement/:reservationId" element={<ConfirmationPaiement />} />
           <Route path="/mes-reservations" element={<MesReservations />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/categories" element={<AdminCategories />} />
         </Route>
       </Routes>
     </BrowserRouter>

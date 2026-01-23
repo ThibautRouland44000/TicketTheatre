@@ -9,7 +9,7 @@ import {
   Icon,
   Text,
 } from "@chakra-ui/react";
-import { BiMenu, BiUser, BiLogOut, BiBookmark } from "react-icons/bi";
+import { BiMenu, BiUser, BiLogOut, BiBookmark, BiCog } from "react-icons/bi";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -90,6 +90,23 @@ export default function Header() {
                 >
                   <RouterLink to="/theatre">Le Théâtre</RouterLink>
                 </Link>
+
+                {user?.role === 'admin' && (
+                  <Link
+                    asChild
+                    p="2"
+                    _hover={{
+                      textDecoration: "none",
+                      bg: "red.700",
+                      borderRadius: "full",
+                    }}
+                  >
+                    <RouterLink to="/admin">
+                      <Icon fontSize="lg"><BiCog /></Icon>
+                      Admin
+                    </RouterLink>
+                  </Link>
+                )}
 
                 <Menu.Root>
                   <Menu.Trigger asChild>
@@ -229,6 +246,20 @@ export default function Header() {
                       >
                         Le Théâtre
                       </Menu.Item>
+                      {user?.role === 'admin' && (
+                        <>
+                          <Menu.Separator />
+                          <Menu.Item
+                            value="admin"
+                            onClick={() => navigate("/admin")}
+                          >
+                            <Icon>
+                              <BiCog />
+                            </Icon>
+                            Administration
+                          </Menu.Item>
+                        </>
+                      )}
                       <Menu.Separator />
                       <Menu.Item value="logout" onClick={handleLogout}>
                         <Icon>

@@ -21,10 +21,10 @@ class PaymentService
      * Create a payment intent with Stripe.
      *
      * @param array $data
-     * @return Payment
+     * @return array
      * @throws ApiErrorException
      */
-    public function createPaymentIntent(array $data): Payment
+    public function createPaymentIntent(array $data): array
     {
         $amount = (int)($data['amount'] * 100); // Convert to cents
 
@@ -70,7 +70,10 @@ class PaymentService
             'status' => 'pending',
         ]);
 
-        return $payment;
+        return [
+            'payment' => $payment,
+            'client_secret' => $paymentIntent->client_secret,
+        ];
     }
 
     /**

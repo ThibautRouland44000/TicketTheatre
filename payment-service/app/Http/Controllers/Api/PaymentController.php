@@ -88,12 +88,12 @@ class PaymentController extends Controller
         }
 
         try {
-            $payment = $this->paymentService->createPaymentIntent($request->all());
+            $result = $this->paymentService->createPaymentIntent($request->all());
 
             return response()->json([
                 'success' => true,
-                'data' => $payment,
-                'client_secret' => $payment->stripe_payment_intent_id,
+                'data' => $result['payment'],
+                'client_secret' => $result['client_secret'],
             ], 201);
         } catch (ApiErrorException $e) {
             return response()->json([

@@ -56,7 +56,7 @@ jobs:
           working-directory: frontend
           install-command: npm install
           start: npm run dev
-          wait-on: "http://127.0.0.1:5173"
+          wait-on: "http://localhost:5173/"
           command: npx cypress run --browser chrome
         env:
           STRIPE_KEY: ${{ secrets.STRIPE_TEST_KEY }}

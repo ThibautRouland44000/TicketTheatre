@@ -44,7 +44,7 @@ jobs:
           sed -i "s|APP_KEY=.*|APP_KEY=$SHARED_KEY|" .env
           sed -i "s|SESSION_DRIVER=.*|SESSION_DRIVER=cookie|" .env
           sed -i "s|STRIPE_SECRET=.*|STRIPE_SECRET=${{ secrets.STRIPE_TEST_KEY }}|" .env
-          touch database/database.sqlite && php artisan migrate --seed --force
+          touch database/database.sqlite && php artisan migrate --force
           php artisan serve --port=8083 &
 
           sleep 5
